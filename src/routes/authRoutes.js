@@ -80,7 +80,8 @@ router.post('/verify-otp', async (req, res) => {
 
             res.status(200).json({
                 msg: 'User logged in successfully',
-                accessToken
+                accessToken,
+                foundUser
             })
         }
 
