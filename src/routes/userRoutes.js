@@ -13,7 +13,7 @@ router.put('/updateUserInfo', verifyJWT, upload.fields([
 ]), async (req, res) => {
     try {
 
-        const { name, college, email, interests } = req.body;
+        const { name, college, email, interests, age, bio } = req.body;
 
         const isOldUser = await User.findOne({ email });
         // console.log(isOldUser)
@@ -32,6 +32,8 @@ router.put('/updateUserInfo', verifyJWT, upload.fields([
             college,
             email,
             interests,
+            age,
+            bio,
             displayPicture,
             profilePics: profilePics.map(file => ({
                 fieldname: file.fieldname,
@@ -56,6 +58,8 @@ router.put('/updateUserInfo', verifyJWT, upload.fields([
         user.college = college;
         user.email = email;
         user.interests = interests;
+        user.age = age;
+        user.bio = bio;
         user.displayPicture = dpUrl.secure_url;
         user.profilePics = ppUrls.map((url) => url.secure_url);
 

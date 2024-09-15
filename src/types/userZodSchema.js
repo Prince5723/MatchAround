@@ -23,6 +23,8 @@ const userSchema = z.object({
         }),
     interests: z.array(z.string()),
     displayPicture: imageFileSchema,
+    bio: z.string(),
+    age: z.number(),
     profilePics: z.array(imageFileSchema).max(4),
 });
 
