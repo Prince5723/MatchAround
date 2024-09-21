@@ -26,21 +26,25 @@ router.post('/send-otp', (req, res) => {
         // Generate OTP
         const otp = speakeasy.totp({ secret: process.env.SPEAKEASY_SECRET, encoding: 'base32' });
         console.log(otp);
-        res.send("otp sent successfully, look in the console");
+        // res.send("otp sent successfully, look in the console");
 
         // Send OTP via Twilio SMS
-        // client.messages.create({
-        //     body: `Your OTP code for Shiksha verification is ${otp}`,
-        //     from: process.env.TWILIO_PHONE_NUMBER,
-        //     to: phoneNumber
-        // })
-        //     .then((message) => {
-        //         res.status(200).send(`OTP sent to ${phoneNumber}`);
-        //     })
-        //     .catch((error) => {
-        //         console.error("Failed to send OTP:", error);
-        //         res.status(500).send('Failed to send OTP');
-        //     });
+        client.messages.create({
+            body: `Your OTP code for NocTurn is ${otp}`,
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: phoneNumber
+        })
+            .then((message) => {
+                res.status(200).json({
+                    msg: `OTP sent to ${phoneNumber}`
+                });
+            })
+            .catch((error) => {
+                console.error("Failed to send OTP:", error);
+                res.status(500).json({
+                    msg: "Failed to send OTP"
+                })
+            });
 
     } catch (e) {
         if (e instanceof zod.ZodError) {
@@ -48,7 +52,9 @@ router.post('/send-otp', (req, res) => {
         } else {
             // Handle unexpected errors
             console.error("An unexpected error occurred:", e);
-            res.status(500).send('An unexpected error occurred');
+            res.status(500).json({
+                msg: 'An unexpected error occurred'
+            });
         }
     }
 });
@@ -99,7 +105,9 @@ router.post('/verify-otp', async (req, res) => {
         }
 
     } else {
-        res.status(400).send('Invalid OTP');
+        res.status(400).json({
+            msg: 'Invalid OTP'
+        });
     }
 });
 

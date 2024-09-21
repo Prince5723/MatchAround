@@ -7,7 +7,9 @@ const verifyJWT = async (req, res, next) => {
 
         // console.log(token);
         if (!token) {
-            res.status(401).send("Unauthorized request")
+            res.status(401).json({
+                msg: "Unauthorized request"
+            })
         }
 
         const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
@@ -16,14 +18,18 @@ const verifyJWT = async (req, res, next) => {
 
         if (!user) {
 
-            res.status(401).send("Unauthorized request")
+            res.status(401).json({
+                msg: "Unauthorized request"
+            })
         }
 
         req.user = user;
         next()
     } catch (error) {
         console.log(error)
-        res.status(401).send("Unauthorized request")
+        res.status(401).json({
+            msg: "Unauthorized request"
+        })
     }
 
 }

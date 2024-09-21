@@ -19,7 +19,9 @@ router.put('/updateUserInfo', verifyJWT, upload.fields([
         // console.log(isOldUser)
 
         if (isOldUser) {
-            return res.status(400).send("User already exists");
+            return res.status(400).json({
+                msg: "User already exists"
+            });
         }
 
         const displayPicture = req.files['displayPicture'] ? req.files['displayPicture'][0] : null;
@@ -73,7 +75,9 @@ router.put('/updateUserInfo', verifyJWT, upload.fields([
         })
     } catch (err) {
         console.log(err);
-        res.status(500).send("An error occurred");
+        res.status(500).json({
+            msg: "An error occurred"
+        });
     }
 });
 
@@ -85,7 +89,9 @@ router.get('/getUserInfo', verifyJWT, async (req, res) => {
         })
     } catch (err) {
         console.log(err);
-        res.status(500).send("An error occurred");
+        res.status(500).json({
+            msg: "An error occurred"
+        });
     }
 });
 
@@ -98,7 +104,9 @@ router.put('/updateDisplayPicture', verifyJWT, upload.single('displayPicture'), 
         const displayPicture = req.file ? req.file : null;
 
         if (!displayPicture) {
-            return res.status(400).send("No display picture provided");
+            return res.status(400).json({
+                msg: "No display picture provided"
+            });
         }
 
         // Upload the new display picture to Cloudinary
@@ -111,13 +119,15 @@ router.put('/updateDisplayPicture', verifyJWT, upload.single('displayPicture'), 
         // Save the updated user in the database
         await user.save();
 
-        res.status(200).send({
+        res.status(200).json({
             message: "Display picture updated successfully",
             displayPicture: dpUrl.secure_url
         });
     } catch (err) {
         console.log(err);
-        res.status(500).send("An error occurred while updating the display picture");
+        res.status(500).json({
+            msg: "An error occurred while updating the display picture"
+        });
     }
 });
 
@@ -131,12 +141,16 @@ router.delete('/deleteProfilePic', verifyJWT, async (req, res) => {
 
         // Ensure the user has profile pictures
         if (!user.profilePics || user.profilePics.length === 0) {
-            return res.status(400).send("No profile pictures to delete");
+            return res.status(400).json({
+                msg: "No profile pictures to delete"
+            });
         }
 
         // Check if the provided index is valid
         if (profilePicIndex < 0 || profilePicIndex >= user.profilePics.length) {
-            return res.status(400).send("Invalid profile picture index");
+            return res.status(400).json({
+                msg: "Invalid profile picture index"
+            });
         }
 
         // Remove the profile picture at the specified index
@@ -145,13 +159,15 @@ router.delete('/deleteProfilePic', verifyJWT, async (req, res) => {
         // Save the updated user profile in the database
         await user.save();
 
-        res.status(200).send({
+        res.status(200).json({
             message: "Profile picture deleted successfully",
             profilePics: user.profilePics // Return updated profilePics array
         });
     } catch (err) {
         console.log(err);
-        res.status(500).send("An error occurred while deleting the profile picture");
+        res.status(500).json({
+            msg: "An error occurred while deleting the profile picture"
+        });
     }
 });
 
@@ -164,12 +180,16 @@ router.put('/uploadProfilePic', verifyJWT, upload.single('profilePic'), async (r
         const profilePic = req.file ? req.file : null;
 
         if (!profilePic) {
-            return res.status(400).send("No profile picture provided");
+            return res.status(400).json({
+                msg: "No profile picture provided"
+            });
         }
 
         // Check if the user already has 4 profile pictures
         if (user.profilePics.length >= 4) {
-            return res.status(400).send("You cannot upload more than 4 profile pictures");
+            return res.status(400).json({
+                msg: "You cannot upload more than 4 profile pictures"
+            });
         }
 
         // Upload the new profile picture to Cloudinary
@@ -181,13 +201,15 @@ router.put('/uploadProfilePic', verifyJWT, upload.single('profilePic'), async (r
         // Save the updated user profile in the database
         await user.save();
 
-        res.status(200).send({
+        res.status(200).json({
             message: "Profile picture uploaded successfully",
             profilePics: user.profilePics // Return updated profilePics array
         });
     } catch (err) {
         console.log(err);
-        res.status(500).send("An error occurred while uploading the profile picture");
+        res.status(500).json({
+            msg: "An error occurred while uploading the profile picture"
+        });
     }
 });
 
@@ -197,7 +219,9 @@ router.delete('/deleteAccount', verifyJWT, async (req, res) => {
         const user = req.user;
 
         if (!user) {
-            return res.status(404).send("User not found");
+            return res.status(404).json({
+                msg: "User not found"
+            });
         }
 
         // Optionally, delete any associated files from Cloudinary : todo
@@ -210,7 +234,9 @@ router.delete('/deleteAccount', verifyJWT, async (req, res) => {
         });
     } catch (err) {
         console.error(err);
-        res.status(500).send("An error occurred while deleting the account");
+        res.status(500).json({
+            msg: "An error occurred while deleting the account"
+        });
     }
 });
 
