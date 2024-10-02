@@ -11,7 +11,8 @@ const userSchema = new mongoose.Schema({
     },
     email: {
         type: String,
-        unique: true
+        unique: true,  // Enforce unique emails
+        sparse: true   // Only enforce uniqueness when the field is not `null` or `undefined`
     },
     phoneNumber: {
         type: String,

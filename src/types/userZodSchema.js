@@ -1,6 +1,6 @@
 const { z } = require("zod");
 
-// z schema for file uploads with image validation
+// zod schema for file uploads with image validation
 const imageFileSchema = z.object({
     fieldname: z.string(),
     originalname: z.string(),

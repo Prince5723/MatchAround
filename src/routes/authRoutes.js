@@ -5,7 +5,7 @@ const speakeasy = require('speakeasy');
 const twilio = require('twilio')
 const User = require('../models/userModels')
 const zod = require("zod")
-
+const otpRatelimiter = require('../middlewares/rateLimiters')
 dotenv.config()
 
 // Twilio credentials
@@ -16,7 +16,7 @@ const client = twilio(accountSid, authToken);
 
 const phoneNumberSchema = zod.string().length(10, "Invalid phone number");
 
-router.post('/send-otp', (req, res) => {
+router.post('/send-otp', otpRatelimiter, (req, res) => {
     try {
         // Validate phone number
         let { phoneNumber } = req.body;
@@ -24,27 +24,27 @@ router.post('/send-otp', (req, res) => {
         phoneNumber = "+91" + phoneNumber;
 
         // Generate OTP
-        const otp = speakeasy.totp({ secret: process.env.SPEAKEASY_SECRET, encoding: 'base32' });
+        const otp = speakeasy.totp({ secret: process.env.SPEAKEASY_SECRET + phoneNumber, encoding: 'base32' });
         console.log(otp);
-        // res.send("otp sent successfully, look in the console");
+        res.send("otp sent successfully, look in the console");
 
         // Send OTP via Twilio SMS
-        client.messages.create({
-            body: `Your OTP code for NocTurn is ${otp}`,
-            from: process.env.TWILIO_PHONE_NUMBER,
-            to: phoneNumber
-        })
-            .then((message) => {
-                res.status(200).json({
-                    msg: `OTP sent to ${phoneNumber}`
-                });
-            })
-            .catch((error) => {
-                console.error("Failed to send OTP:", error);
-                res.status(500).json({
-                    msg: "Failed to send OTP"
-                })
-            });
+        // client.messages.create({
+        //     body: `Your OTP code for NocTurn is ${otp}`,
+        //     from: process.env.TWILIO_PHONE_NUMBER,
+        //     to: phoneNumber
+        // })
+        //     .then((message) => {
+        //         res.status(200).json({
+        //             msg: `OTP sent to ${phoneNumber}`
+        //         });
+        //     })
+        //     .catch((error) => {
+        //         console.error("Failed to send OTP:", error);
+        //         res.status(500).json({
+        //             msg: "Failed to send OTP"
+        //         })
+        //     });
 
     } catch (e) {
         if (e instanceof zod.ZodError) {
@@ -59,54 +59,63 @@ router.post('/send-otp', (req, res) => {
     }
 });
 
-router.post('/verify-otp', async (req, res) => {
-    const { otp, phoneNumber } = req.body;
-    console.log('user sent this otp: ' + otp)
+router.post('/verify-otp', otpRatelimiter, async (req, res) => {
+    try {
+        let { otp, phoneNumber } = req.body;
 
-    const verified = speakeasy.totp.verify({
-        secret: process.env.SPEAKEASY_SECRET,
-        encoding: 'base32',
-        token: otp,
-        window: 1
-    });
+        phoneNumber = "+91" + phoneNumber;
 
-    console.log(verified)
+        console.log('user sent this otp: ' + otp)
 
-    if (verified) {
-
-        const foundUser = await User.findOne({
-            phoneNumber
+        const verified = speakeasy.totp.verify({
+            secret: process.env.SPEAKEASY_SECRET + phoneNumber,
+            encoding: 'base32',
+            token: otp,
+            window: 1
         });
 
-        if (foundUser) {
+        console.log(verified)
 
-            console.log("User looged in: ", + foundUser)
+        if (verified) {
 
-            const accessToken = foundUser.generateAccessToken();
-
-            res.status(200).json({
-                msg: 'User logged in successfully',
-                accessToken,
-                foundUser
-            })
-        }
-
-        else {
-            const user = await User.create({
+            const foundUser = await User.findOne({
                 phoneNumber
             });
 
-            const accessToken = user.generateAccessToken();
+            if (foundUser) {
 
-            res.status(200).json({
-                msg: 'User created successfully, Please complete your profile',
-                accessToken
-            })
+                const accessToken = foundUser.generateAccessToken();
+
+                res.status(200).json({
+                    msg: 'User logged in successfully',
+                    accessToken,
+                    foundUser
+                })
+            }
+
+            else {
+                const user = await User.create({
+                    phoneNumber
+                });
+
+                const accessToken = user.generateAccessToken();
+
+                res.status(200).json({
+                    msg: 'User created successfully, Please complete your profile',
+                    accessToken
+                })
+            }
+
+        } else {
+            res.status(400).json({
+                msg: 'Invalid OTP'
+            });
         }
-
-    } else {
-        res.status(400).json({
-            msg: 'Invalid OTP'
+    }
+    catch (e) {
+        console.log(e)
+        res.status(500).json({
+            msg: 'An unexpected error occurred'
         });
     }
 });
