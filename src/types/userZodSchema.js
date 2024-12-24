@@ -21,10 +21,11 @@ const userSchema = z.object({
         .refine(email => email.endsWith("@cuchd.in"), {
             message: "Email must end with @cuchd.in"
         }),
+    gender: z.string(),   
     interests: z.array(z.string()),
     displayPicture: imageFileSchema,
     bio: z.string(),
-    age: z.number(),
+    age: z.string(),
     profilePics: z.array(imageFileSchema).max(4),
 });
 
